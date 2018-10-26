@@ -9,9 +9,17 @@ namespace SnakeGame
     class GameStats
     {
         public int foodCount;
-        public int speed;
+        public float speed;
         int level;
         int score;
+
+        private Action onUpdated = delegate { };
+
+
+        public void OnUpdateSubscribe(Action onUpdated)
+        {
+            this.onUpdated += onUpdated;
+        }
 
 
         public GameStats()
@@ -19,7 +27,7 @@ namespace SnakeGame
             foodCount = 0;
             level = 1;
             score = 0;
-            speed = 700;
+            speed = 1.0f;
         }
 
         public void EatOneFood()
@@ -31,6 +39,7 @@ namespace SnakeGame
                 speed = speed - ((level - 1) * 50);
             }
             score += level;
+            onUpdated?.Invoke();
         }
 
         public Dictionary<string, int> GetGameStats()

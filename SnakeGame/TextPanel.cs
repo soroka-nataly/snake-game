@@ -4,28 +4,27 @@ using System.Linq;
 using SFML.Graphics;
 using SFML.Window;
 using System.IO;
-using System.Text.RegularExpressions;
 
 namespace SnakeGame
 {
     class TextPanel : Drawable
     {
-        uint height;
-        uint width;
-        uint top;
+        int height;
+        int width;
+        int top;
         GameStats gameStats;
-        Dictionary<string, int> stats;
         List<Text> textForDraw = new List<Text>();
 
-        Font font = new Font(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "cour.ttf"));
+        static readonly Font font = new Font(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Fonts), "cour.ttf"));
 
-        public TextPanel(uint top, uint height, uint width, GameStats gameStats)
+        public TextPanel(int top, int height, int width, GameStats gameStats)
         {
             this.gameStats = gameStats;
-            this.stats = this.gameStats.GetGameStats();
             this.height = height;
             this.width = width;
             this.top = top;
+
+            gameStats.OnUpdateSubscribe(UpdatePanelView);
 
             UpdatePanelView();
         }
@@ -34,29 +33,29 @@ namespace SnakeGame
         {
             foreach (var text in textForDraw)
             {
-                window.Draw(text);
+                text.Draw(window, states);
             }
         }
 
         public void UpdatePanelView()
         {
-            stats = gameStats.GetGameStats();
             int numParam = 0;
             textForDraw.Clear();
+            var stats = gameStats.GetGameStats();
             foreach (KeyValuePair<string, int> param in stats)
             {
-                var text = CreateText(param.Key, param.Value, numParam);
+                var text = CreateText(param.Key, param.Value, numParam, (stats.Count()));
                 textForDraw.Add(text);
                 numParam++;
             }
         }
 
-        private Text CreateText(string textParam, int valueParam, int numParam)
+        private Text CreateText(string textParam, int valueParam, int numParam, int countParams)
         {
-            uint lineHeight = height / (((uint)stats.Count() + 1)/ 2);
+            int lineHeight = height / ((countParams + 1)/ 2);
             var text = new Text(textParam + ": " + valueParam.ToString(), font)
             {
-                CharacterSize = lineHeight - 2,
+                CharacterSize = (uint)lineHeight - 2,
                 Position = new Vector2f(numParam % 2 * (width / 2), (numParam / 2 * lineHeight) + top)
             };
 

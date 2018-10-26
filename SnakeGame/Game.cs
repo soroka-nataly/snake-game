@@ -22,64 +22,69 @@ namespace SnakeGame
         Snake snake;
         Field field;
         TextPanel panel;
-        Timer runGameTimer;
-        Int32 stepSpeed = 200;
+        TimeCounter timeCounter;
+        //Timer runGameTimer;
+        //Int32 stepSpeed = 200;
 
         public GameStats gameStats;
 
+        private void Draw()
+        {
+            mainWindow.Clear();
+            mainWindow.Draw(field);
+            mainWindow.Draw(snake);
+            mainWindow.Draw(panel);
+        }
+
+        private void ProcessInput()
+        {
+            if (snake.IsDead)
+            {
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Return))
+                {
+                    InitGame();
+                }
+            }
+            else
+            {
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Up))
+                {
+                    snake.NewDirection = Direction.Up;
+                }
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Down))
+                {
+                    snake.NewDirection = Direction.Down;
+                }
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Left))
+                {
+                    snake.NewDirection = Direction.Left;
+                }
+                if (Keyboard.IsKeyPressed(Keyboard.Key.Right))
+                {
+                    snake.NewDirection = Direction.Right;
+                }
+            }
+        }
+
         public void RunGame()
         {
-            mainWindow = new RenderWindow(new VideoMode(WidthField * FieldCellSize, HeightField * FieldCellSize + HeightPanel), "Snake Game");
-            mainWindow.Closed += MainWindow_Closed;
-            InitGame();
-
-            
+            Init();            
             
             while (mainWindow.IsOpen())
             {
                 mainWindow.DispatchEvents();
-                mainWindow.Clear();
-                mainWindow.Draw(field);
-                mainWindow.Draw(snake);
-                mainWindow.Draw(panel);
-
-
-                if (context.CurrentDisplayStatus == RuntimeContext.DisplayStatuses.stopGame)
-                {
-                    if (Keyboard.IsKeyPressed(Keyboard.Key.Return))
-                    {
-                        InitGame();
-                    }
-                }
-                else
-                {
-                    if (Keyboard.IsKeyPressed(Keyboard.Key.Up))
-                    {
-                        SnakeDirection = Direction.Up;
-                    }
-                    if (Keyboard.IsKeyPressed(Keyboard.Key.Down))
-                    {
-                        SnakeDirection = Direction.Down;
-                    }
-                    if (Keyboard.IsKeyPressed(Keyboard.Key.Left))
-                    {
-                        SnakeDirection = Direction.Left;
-                    }
-                    if (Keyboard.IsKeyPressed(Keyboard.Key.Right))
-                    {
-                        SnakeDirection = Direction.Right;
-                    }
-
-                    if (context.CurrentDisplayStatus == RuntimeContext.DisplayStatuses.updateDisplay)
-                    {
-                        snake.ChangeDirection(SnakeDirection);
-                        context.CurrentDisplayStatus = RuntimeContext.DisplayStatuses.pauseUpdating;
-                        UpdateAll();
-                    }
-                }
+                ProcessInput();
+                UpdateAll(timeCounter.getTimeElapsed());
+                Draw();
                 mainWindow.Display();
-
             }
+        }
+
+        private void Init()
+        {
+            mainWindow = new RenderWindow(new VideoMode(WidthField * FieldCellSize, HeightField * FieldCellSize + HeightPanel), "Snake Game");
+            mainWindow.Closed += MainWindow_Closed;
+            InitGame();
         }
 
         private void InitGame()
@@ -88,13 +93,17 @@ namespace SnakeGame
             field.NewFood();
             SnakeDirection = Direction.Up;
             var startCoordinate = new Vector2i(WidthField / 2, HeightField / 2); //нужно ли ограничение на четность клеток поля???
-            snake = new Snake(StartLenth, startCoordinate, SnakeDirection, field);
             gameStats = new GameStats();
-            panel = new TextPanel((uint)(HeightField * FieldCellSize), (uint)HeightPanel, (uint)(WidthField * FieldCellSize), gameStats);
-            
+            snake = new Snake(StartLenth, startCoordinate, SnakeDirection, field);
 
-            TimerCallback timerCb = new TimerCallback(SetUpdateEnabled);
-            this.runGameTimer = new Timer(timerCb, null, 0, stepSpeed); //избавиться от таймера
+            snake.OnEatFoodSubscribe(gameStats.EatOneFood);
+            snake.OnEatFoodSubscribe(field.NewFood);
+
+            panel = new TextPanel(HeightField * FieldCellSize, HeightPanel, WidthField * FieldCellSize, gameStats);
+
+            timeCounter = new TimeCounter();
+            //TimerCallback timerCb = new TimerCallback(SetUpdateEnabled);
+            //this.runGameTimer = new Timer(timerCb, null, 0, stepSpeed); //избавиться от таймера
         }
 
         private void SetUpdateEnabled(object obj)
@@ -102,30 +111,9 @@ namespace SnakeGame
             context.CurrentDisplayStatus = RuntimeContext.DisplayStatuses.updateDisplay;
         }
 
-        private void UpdateAll()
+        private void UpdateAll(float dt)
         {
-            Vector2i newHeadCoordinate = snake.Head.Coordinate + Field.getCoordinateOffset(snake.moveDirection, false);
-            if (field.Data[newHeadCoordinate.X, newHeadCoordinate.Y] == null || field.Data[newHeadCoordinate.X, newHeadCoordinate.Y].IsPermeate)
-            {
-                if ((field.Data[newHeadCoordinate.X, newHeadCoordinate.Y] is Food))
-                {
-                    gameStats.EatOneFood(); //надо ли как-то объединить???
-                    this.stepSpeed = gameStats.speed;
-                    panel.UpdatePanelView();
-                    field.NewFood();
-                    snake.DoNextStep(newHeadCoordinate, false);
-                }
-                else
-                {
-                    snake.DoNextStep(newHeadCoordinate, true);
-                }
-            }
-            else
-            {
-                runGameTimer.Dispose();
-                context.CurrentDisplayStatus = RuntimeContext.DisplayStatuses.stopGame;
-                this.snake.Die();
-            }
+            snake.Update(dt);
 
         }
 

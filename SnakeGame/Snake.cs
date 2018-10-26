@@ -7,18 +7,24 @@ using SFML.Window;
 
 namespace SnakeGame
 {
-    enum snakeState { live, dead, ate }
+    enum SnakeState { alive, dead }
 
     sealed class Snake : Drawable
     {
         public Color color = new Color(150, 200, 50);
         List<SnakePart> body = new List<SnakePart>();
+        private SnakeState snakeState = SnakeState.alive;
+        public bool IsDead => snakeState == SnakeState.dead;
         Field field;
-        public Direction moveDirection;
+        private Direction moveDirection;
+        private Direction newDirection;
 
         readonly static Vector2f snakeCellSize = new Vector2f(Game.FieldCellSize - 2, Game.FieldCellSize - 2);
 
-        public SnakePart Head { get { return body.First(); } }
+        private SnakePart Head { get { return body.First(); } }
+
+        private float timer = 0.0f;
+        private float tickTime = 0.5f;
 
         public Snake(byte length, Vector2i startCoordinate, Direction moveDirection, Field field)
         {
@@ -39,6 +45,19 @@ namespace SnakeGame
             }
             body.First().FillColor = Color.Red;
 
+        }
+
+        public void Update(float dt)
+        {
+            timer += dt;
+            while (timer > tickTime)
+            {
+                if (snakeState == SnakeState.alive)
+                {
+                    NextStep();
+                }
+                timer -= tickTime;
+            }
         }
 
         public void ChangeColor(Color color)
@@ -65,17 +84,67 @@ namespace SnakeGame
 
         }
 
+        private void NextStep()
+        {
+            moveDirection = newDirection;
+            Vector2i newHeadCoordinate = Head.Coordinate + Field.getCoordinateOffset(moveDirection, false);
+            if (field.Data[newHeadCoordinate.X, newHeadCoordinate.Y] == null || field.Data[newHeadCoordinate.X, newHeadCoordinate.Y].IsPermeate)
+            {
+                if ((field.Data[newHeadCoordinate.X, newHeadCoordinate.Y] is Food))
+                {
+                    EatOneFood(); //надо ли как-то объединить???
+
+
+
+                    //tickTime = gameStats.speed;
+                    //panel.UpdatePanelView();
+
+                    //field.NewFood();
+                    DoNextStep(newHeadCoordinate, false);
+                }
+                else
+                {
+                    DoNextStep(newHeadCoordinate, true);
+                }
+            }
+            else
+            {
+                Die();
+            }
+        }
+
+        private Action onEatFood = delegate { };
+
+        public void OnEatFoodSubscribe(Action onEatFood)
+        {
+            this.onEatFood += onEatFood;
+        }
+
+        private void EatOneFood()
+        {
+            onEatFood?.Invoke();
+        }
+
         public void Die()
         {
+            snakeState = SnakeState.dead;
             this.ChangeColor(new Color(150, 150, 150));
         }
 
-        public void ChangeDirection(Direction newDirection)
+        public Direction NewDirection
         {
-            if (this.moveDirection == newDirection || Field.InvertDirection(this.moveDirection) == newDirection)
-                return;
+            get
+            {
+                return newDirection;
+            }
+            set
+            {
+                if (moveDirection != value && Field.InvertDirection(moveDirection) != value)
+                {
+                    newDirection = value;
+                }
+            }
 
-            this.moveDirection = newDirection;
         }
 
         private SnakePart NewPart(Vector2i coordinate, Color color)
@@ -90,37 +159,11 @@ namespace SnakeGame
             return bodyPart;
         }
 
-
-
-        /*private Vector2f GetPositionOffset(Direction direction, bool inversion)
-        {
-            Vector2f offset = new Vector2f(0, 0); //для чего создавать новый???
-            if (inversion)
-                direction = InvertDirection(direction);
-
-            switch (direction)
-            {
-                case Direction.Down:
-                    offset = new Vector2f(0f, 16.0f);
-                    break;
-                case Direction.Left:
-                    offset = new Vector2f(-16.0f, 0f);
-                    break;
-                case Direction.Up:
-                    offset = new Vector2f(0f, -16.0f);
-                    break;
-                case Direction.Right:
-                    offset = new Vector2f(16.0f, 0f);
-                    break;
-            }
-            return offset;
-        }   */
-
         public void Draw(RenderTarget window, RenderStates states)
         {
             foreach (SnakePart part in this.body)
             {
-                window.Draw(part);
+                part.Draw(window, states);
             }
         }
     }

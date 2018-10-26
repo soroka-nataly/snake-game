@@ -82,6 +82,7 @@
     <Compile Include="RuntimeContext.cs" />
     <Compile Include="Snake.cs" />
     <Compile Include="TextPanel.cs" />
+    <Compile Include="TimeCounter.cs" />
     <Compile Include="Wall.cs" />
   </ItemGroup>
   <ItemGroup>

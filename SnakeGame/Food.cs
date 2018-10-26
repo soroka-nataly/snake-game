@@ -23,7 +23,7 @@ namespace SnakeGame
 
         public void Draw(RenderTarget window, RenderStates states)
         {
-            window.Draw(drawableElement);
+            drawableElement.Draw(window, states);
         }
     }
 }
