@@ -6,8 +6,7 @@ namespace SnakeGame
     {
         static void Main()
         {
-            var game = new Game();
-            game.RunGame();
+            new Game().Run();
         }
     }    
 }

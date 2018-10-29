@@ -5,8 +5,6 @@ using SFML.Window;
 
 namespace SnakeGame
 {
-    public enum Element { Empty, Wall, food }
-
     class Field : Drawable
     {
         public IFieldElement[,] Data;
@@ -96,6 +94,27 @@ namespace SnakeGame
                     break;
             }
             return newDirection;
+        }
+
+        public IFieldElement HasSomethingHere(int x, int y)
+        {
+            var element = Data[x, y];
+            return element;
+        }
+
+        public void CreateSnake(List<SnakePart> snake)
+        {
+            foreach (SnakePart part in snake)
+            {
+                Data[part.Coordinate.X, part.Coordinate.Y] = part;
+            }
+        }
+
+        public void UpdateSnake(SnakePart newHead, SnakePart deleteTail = null)
+        {
+            Data[newHead.Coordinate.X, newHead.Coordinate.Y] = newHead;
+            if (deleteTail != null)
+                Data[newHead.Coordinate.X, newHead.Coordinate.Y] = null;
         }
 
         public void Draw(RenderTarget window, RenderStates states)

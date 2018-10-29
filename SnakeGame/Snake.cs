@@ -40,7 +40,7 @@ namespace SnakeGame
             }
 
         }
-        
+
         public Snake(byte length, Vector2i startCoordinate, Direction moveDirection, Field field)
         {
             this.field = field;
@@ -53,21 +53,18 @@ namespace SnakeGame
                 this.body.Add(bodyPart);
                 partCoordinate = partCoordinate + Field.getCoordinateOffset(moveDirection, true);
             }
-            foreach (SnakePart part in body)
-            {
-                field.Data[part.Coordinate.X, part.Coordinate.Y] = part;
-            }
+            field.CreateSnake(body);
             body.First().FillColor = Color.Red;
-            
+
         }
 
         public void ChangeColor(Color color)
         {
-            foreach (SnakePart part in this.body)
+            var tail = body.Skip(1);
+            foreach (SnakePart part in tail)
             {
                 part.FillColor = color;
             }
-            body[0].FillColor = Color.Red;
         }
 
         public void Update(float dt)
@@ -77,41 +74,34 @@ namespace SnakeGame
             {
                 if (!IsDead)
                 {
-                     NextStep();
+                    DoNextStep();
                 }
                 timer -= tickTime;
             }
 
         }
 
-        public void DoNextStep(Vector2i newHeadCoordinate, bool hungry)
-        {
-            if (hungry)
-            {
-                field.Data[body.Last().Coordinate.X, body.Last().Coordinate.Y] = null;
-                body.Remove(body.Last());
-            }
-            body.First().FillColor = this.color;
-            var newHead = NewPart(newHeadCoordinate, Color.Red);
-            body.Insert(0, newHead);
-            field.Data[newHead.Coordinate.X, newHead.Coordinate.Y] = newHead;
-        }
-
-        private void NextStep()
+        private void DoNextStep()
         {
             moveDirection = newDirection;
             Vector2i newHeadCoordinate = Head.Coordinate + Field.getCoordinateOffset(moveDirection, false);
-            if (field.Data[newHeadCoordinate.X, newHeadCoordinate.Y] == null || field.Data[newHeadCoordinate.X, newHeadCoordinate.Y].IsPermeate)
+            var currentElement = field.HasSomethingHere(newHeadCoordinate.X, newHeadCoordinate.Y);
+            if (currentElement == null || currentElement.IsPermeate)
             {
-                if ((field.Data[newHeadCoordinate.X, newHeadCoordinate.Y] is Food))
+                if (currentElement is Food)
                 {
                     EatOneFood();
-                    DoNextStep(newHeadCoordinate, false);
+
                 }
                 else
                 {
-                    DoNextStep(newHeadCoordinate, true);
+                    field.Data[body.Last().Coordinate.X, body.Last().Coordinate.Y] = null;
+                    body.Remove(body.Last());
                 }
+                body.First().FillColor = this.color;
+                var newHead = NewPart(newHeadCoordinate, Color.Red);
+                body.Insert(0, newHead);
+                field.Data[newHead.Coordinate.X, newHead.Coordinate.Y] = newHead;
             }
             else
             {

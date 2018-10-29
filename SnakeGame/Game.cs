@@ -24,7 +24,7 @@ namespace SnakeGame
         private TimeCounter timeCounter;
         private Direction SnakeDirection = Direction.Up;
 
-        public void RunGame()
+        public void Run()
         {
             Init();
 

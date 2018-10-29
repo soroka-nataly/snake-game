@@ -36,7 +36,7 @@ namespace SnakeGame
             if (foodCount % 5 == 0)
             {
                 level++;
-                speed = 0.9f * speed;
+                speed = 0.75f * speed;
             }
             score += level;
             onUpdated?.Invoke();
