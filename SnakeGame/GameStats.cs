@@ -10,9 +10,9 @@ namespace SnakeGame
     {
         public int foodCount;
         public float speed;
-        int level;
-        int score;
 
+        private int level;
+        private int score;
         private Action onUpdated = delegate { };
 
 
@@ -27,7 +27,7 @@ namespace SnakeGame
             foodCount = 0;
             level = 1;
             score = 0;
-            speed = 1.0f;
+            speed = 0.6f;
         }
 
         public void EatOneFood()
@@ -36,7 +36,7 @@ namespace SnakeGame
             if (foodCount % 5 == 0)
             {
                 level++;
-                speed = speed - ((level - 1) * 50);
+                speed = 0.9f * speed;
             }
             score += level;
             onUpdated?.Invoke();

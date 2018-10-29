@@ -5,7 +5,7 @@ using SFML.Window;
 
 namespace SnakeGame
 {
-    public enum Element { empty, wall, food }
+    public enum Element { Empty, Wall, food }
 
     class Field : Drawable
     {

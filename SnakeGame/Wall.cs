@@ -9,8 +9,8 @@ namespace SnakeGame
     class Wall : IFieldElement, Drawable
     {
         public bool IsPermeate => false;
-        Color color = new Color(200, 200, 200);
-        Drawable drawableElement;
+        private Color color = new Color(200, 200, 200);
+        private Drawable drawableElement;
 
         public Wall(Vector2i coordinate)
         {

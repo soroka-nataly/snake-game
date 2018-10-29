@@ -8,8 +8,6 @@ namespace SnakeGame
 {
     interface IFieldElement
     {
-        bool IsPermeate { get; }
-        
-
+        bool IsPermeate { get; }    
     }
 }

@@ -9,8 +9,8 @@ namespace SnakeGame
     class Food : IFieldElement, Drawable
     {
         public bool IsPermeate => true;
-        Color color = new Color(255, 104, 0);
-        Drawable drawableElement;
+        private Color color = new Color(255, 104, 0);
+        private Drawable drawableElement;
 
         public Food(Vector2i coordinate)
         {
