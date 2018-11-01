@@ -10,10 +10,10 @@ namespace SnakeGame
     sealed class Game
     {
         public const byte FieldCellSize = 16;
-        public const Int32 WidthField = 30;
-        public const Int32 HeightField = 30;
-        private const Int32 HeightPanel = 60;
-        private const Int32 StartLenth = 4;
+        public const int WidthField = 29;
+        public const int HeightField = 29;
+        private const int HeightPanel = 60;
+        private const int StartLenth = 4;
 
         public static RuntimeContext context = new RuntimeContext();
         public GameStats gameStats;
@@ -46,7 +46,6 @@ namespace SnakeGame
             mainWindow.GainedFocus += OnAllEvents;
             mainWindow.KeyPressed += OnKeyPressed;
             mainWindow.KeyReleased += OnKeyReleased;
-            
 
             InitGame();
         }
@@ -117,27 +116,33 @@ namespace SnakeGame
 
         private void InitGame()
         {
-            field = new Field(WidthField, HeightField);
-            field.NewFood();
-            SnakeDirection = Direction.Up;
-            var startCoordinate = new Vector2i(WidthField / 2, HeightField / 2); //нужно ли ограничение на четность клеток поля???
-            gameStats = new GameStats();
-            snake = new Snake(StartLenth, startCoordinate, SnakeDirection, field);
-
-            snake.OnEatFoodSubscribe(gameStats.EatOneFood);
-            snake.OnEatFoodSubscribe(field.NewFood);
-
+            gameStats = new GameStats(2, 2); //надо с этим что-то делать..
             panel = new TextPanel(HeightField * FieldCellSize, HeightPanel, WidthField * FieldCellSize, gameStats);
+            field = new Field(WidthField, HeightField);
+
+            InitSnake(StartLenth);
+            SnakeDirection = Direction.Up;
 
             timeCounter = new TimeCounter();
             context.IsGameRun = true;
 
-            gameStats.OnUpdateSubscribe(UpdateSnakeSpeed);
+            gameStats.OnLevelUpdateSubscription(UpdateFromStats);
         }
 
-        private void UpdateSnakeSpeed ()
+        private void InitSnake(int length)
         {
-            snake.UpdateSnakeSpeed(gameStats.speed);
+            snake = new Snake(length, new Vector2i(WidthField / 2, HeightField / 2), SnakeDirection, field);
+            snake.OnEatFoodSubscribe(gameStats.EatOneFood);
+            gameStats.OnSpeedUpdateSubscription(snake.IncreaseSpeed);
+            //snake.OnEatFoodSubscribe(field.NewFood);
+        }
+
+        private void UpdateFromStats()
+        {
+            var currentRound = field.Update(gameStats.level);
+            InitSnake(StartLenth + currentRound);
+            //else
+            //    snake.IncreaseSpeed(gameStats.speedLevel);
         }
 
         private void UpdateAll(float dt)

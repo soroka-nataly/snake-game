@@ -8,43 +8,66 @@ namespace SnakeGame
 {
     class GameStats
     {
-        public int foodCount;
-        public float speed;
-
-        private int level;
+        public int foodCount;        
         private int score;
         private Action onUpdated = delegate { };
+        private Action onLevelUpdated = delegate { };
+        private Action onSpeedUpdated = delegate { };
 
+        //public float speed { get; set; }
+        public int level { get; set; }
+        public int speedLevel { get; set; }
+        public int updateSpeedPeriod { get; set; }
+        public int updateLevelPeriod { get; set; }
 
-        public void OnUpdateSubscribe(Action onUpdated)
+        public void OnUpdateSubscription(Action onUpdated)
         {
             this.onUpdated += onUpdated;
         }
 
+        public void OnLevelUpdateSubscription(Action onUpdated)
+        {
+            this.onLevelUpdated += onUpdated;
+        }
 
-        public GameStats()
+        public void OnSpeedUpdateSubscription(Action onUpdated)
+        {
+            this.onSpeedUpdated += onUpdated;
+        }
+
+        public GameStats(int updateSpeedPeriod, int updateLevelPeriod)
         {
             foodCount = 0;
             level = 1;
             score = 0;
-            speed = 0.6f;
+            //speed = 0.6f;
+
+            this.updateSpeedPeriod = updateSpeedPeriod;
+            this.updateLevelPeriod = updateLevelPeriod;
         }
 
         public void EatOneFood()
         {
             foodCount++;
-            if (foodCount % 5 == 0)
+            if (foodCount % updateSpeedPeriod == 0)
             {
-                level++;
-                speed = 0.75f * speed;
+                speedLevel++;
+                if (speedLevel % updateLevelPeriod == 0)
+                {
+                    level++;
+                    onLevelUpdated?.Invoke();
+
+                }
+                onSpeedUpdated?.Invoke();
+                //speed *= 0.8f;
             }
             score += level;
             onUpdated?.Invoke();
         }
 
-        public Dictionary<string, int> GetGameStats()
+        public Dictionary<string, float> GetGameStats()
         {
-            var stats = new Dictionary<string, int>
+            var stats = new Dictionary<string, float>
             {
                 { "Food", foodCount },
                 { "Level", level },

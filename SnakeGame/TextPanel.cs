@@ -26,7 +26,7 @@ namespace SnakeGame
             this.width = width;
             this.top = top;
 
-            gameStats.OnUpdateSubscribe(UpdatePanelView);
+            gameStats.OnUpdateSubscription(UpdatePanelView);
 
             UpdatePanelView();
             CreatePausePanel();
@@ -111,7 +111,7 @@ namespace SnakeGame
             int numParam = 0;
             textForDraw.Clear();
             var stats = gameStats.GetGameStats();
-            foreach (KeyValuePair<string, int> param in stats)
+            foreach (KeyValuePair<string, float> param in stats)
             {
                 var text = CreateText(param.Key, param.Value, numParam, (stats.Count()));
                 textForDraw.Add(text);
@@ -119,7 +119,7 @@ namespace SnakeGame
             }
         }
 
-        private Text CreateText(string textParam, int valueParam, int numParam, int countParams)
+        private Text CreateText(string textParam, float valueParam, int numParam, int countParams)
         {
             int lineHeight = height / ((countParams + 1)/ 2);
             var text = new Text(textParam + ": " + valueParam.ToString(), font)

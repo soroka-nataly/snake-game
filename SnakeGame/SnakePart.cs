@@ -13,7 +13,7 @@ namespace SnakeGame
 
         public SnakePart(Vector2f size)
         {
-            this.Size = size;
+            Size = size;
         }
     }
 }

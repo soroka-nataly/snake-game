@@ -80,6 +80,7 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="RuntimeContext.cs" />
+    <Compile Include="SimpleJSON.cs" />
     <Compile Include="Snake.cs" />
     <Compile Include="SnakePart.cs" />
     <Compile Include="TextPanel.cs" />
