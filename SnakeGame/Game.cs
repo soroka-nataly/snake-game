@@ -18,6 +18,7 @@ namespace SnakeGame
         public static RuntimeContext context = new RuntimeContext();
         public GameStats gameStats;
         private RenderWindow mainWindow;
+        private GameRules rules;
         private Snake snake;
         private Field field;
         private TextPanel panel;
@@ -30,9 +31,9 @@ namespace SnakeGame
 
             while (mainWindow.IsOpen())
             {
-                mainWindow.DispatchEvents();
+                mainWindow.DispatchEvents();                
+                UpdateAll(timeCounter.getTimeElapsed());
                 Draw();
-                UpdateAll(timeCounter.getTimeElapsed(context.IsGameRun));
                 mainWindow.Display();
             }
         }
@@ -54,7 +55,7 @@ namespace SnakeGame
         {
             mainWindow.Clear();
             mainWindow.Draw(field);
-            mainWindow.Draw(snake);
+            //mainWindow.Draw(snake);
             mainWindow.Draw(panel);
             if (context.IsGamePause)
             {
@@ -111,33 +112,41 @@ namespace SnakeGame
                 case Keyboard.Key.Space:
                     context.IsGameRun = !context.IsGameRun;
                     break;
+                case Keyboard.Key.C:
+                    snake.Waiting = !snake.Waiting;
+                    break;
             }
         }
 
         private void InitGame()
         {
-            gameStats = new GameStats(2, 2); //надо с этим что-то делать..
+            gameStats = new GameStats(2, 1); //надо с этим что-то делать..
             panel = new TextPanel(HeightField * FieldCellSize, HeightPanel, WidthField * FieldCellSize, gameStats);
             field = new Field(WidthField, HeightField);
+            rules = new GameRules(field);
 
             InitSnake(StartLenth);
             SnakeDirection = Direction.Up;
 
             timeCounter = new TimeCounter();
             context.IsGameRun = true;
-
-            gameStats.OnLevelUpdateSubscription(UpdateFromStats);
         }
 
         private void InitSnake(int length)
         {
             snake = new Snake(length, new Vector2i(WidthField / 2, HeightField / 2), SnakeDirection, field);
+            rules.SetSnake(snake);
+
             snake.OnEatFoodSubscribe(gameStats.EatOneFood);
+            snake.OnCompleteLevelSubscribe(UpdateFieldLevel);
             gameStats.OnSpeedUpdateSubscription(snake.IncreaseSpeed);
-            //snake.OnEatFoodSubscribe(field.NewFood);
+            gameStats.OnLevelUpdateSubscription(snake.Win);
+            gameStats.OnLevelUpdateSubscription(rules.Win);
+
+            rules.StartGame();
         }
 
-        private void UpdateFromStats()
+        private void UpdateFieldLevel()
         {
             var currentRound = field.Update(gameStats.level);
             InitSnake(StartLenth + currentRound);
@@ -147,7 +156,7 @@ namespace SnakeGame
 
         private void UpdateAll(float dt)
         {
-            snake.Update(dt);
+            snake.Update(dt, context.IsGameRun);
         }
 
         private void OnAllEvents(object sender, EventArgs e)

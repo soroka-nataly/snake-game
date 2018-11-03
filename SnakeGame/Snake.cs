@@ -7,25 +7,27 @@ using SFML.Window;
 
 namespace SnakeGame
 {
-    enum SnakeState { Alive, Dead }
-
     sealed class Snake : Drawable
     {
+        enum SnakeState { Alive, Wait, Dead }
         readonly static Vector2f snakeCellSize = new Vector2f(Game.FieldCellSize - 2, Game.FieldCellSize - 2);
 
         public Color color = new Color(150, 200, 50);
 
         private List<SnakePart> body = new List<SnakePart>();
-        private SnakeState snakeState = SnakeState.Alive;
+        private SnakeState state = SnakeState.Alive;
         private Field field;
         private Direction moveDirection;
         private Direction newDirection;
         private float timer = 0.0f;
-        private float speed = 0.5f;
+        private float speed = 0.25f;
         private float startSpeed;
+        private bool FoodWasEaten = false;
         private Action onEatFood = delegate { };
+        private Action onLevelComplete = delegate { };
 
-        public bool IsDead => snakeState == SnakeState.Dead;
+        public bool IsDead => state == SnakeState.Dead;
+        public bool IsWait => state == SnakeState.Wait;
         //private SnakePart Head { get { return body.First(); } }
 
         public Direction NewDirection
@@ -33,12 +35,23 @@ namespace SnakeGame
             get { return newDirection; }
             set
             {
-                if (moveDirection != value && Field.InvertDirection(moveDirection) != value)
+                if (moveDirection != value && moveDirection.Invert() != value)
                 {
                     newDirection = value;
                 }
             }
+        }
 
+        public bool Waiting
+        {
+            get => state == SnakeState.Wait;
+            set
+            {
+                if (value)
+                    state = SnakeState.Wait;
+                else
+                    state = SnakeState.Alive;
+            }
         }
 
         public Snake(int length, Vector2i startCoordinate, Direction moveDirection, Field field)
@@ -52,9 +65,11 @@ namespace SnakeGame
             {
                 var bodyPart = NewPart(partCoordinate, this.color);
                 this.body.Add(bodyPart);
-                partCoordinate = partCoordinate + Field.getCoordinateOffset(moveDirection, true);
+                partCoordinate = partCoordinate + moveDirection.GetInverseVector();
+
+                //moveDirection.Next(partCoordinate);
             }
-            field.CreateSnake(body);
+            field.UpdateCells(body);
             body.First().FillColor = Color.Red;
 
         }
@@ -68,49 +83,71 @@ namespace SnakeGame
             }
         }
 
-        public void Update(float dt)
+        public void Update(float dt, bool IsGameRun)
         {
-            timer += dt;
-            while (timer > speed)
-            {
-                if (!IsDead)
-                {
-                    DoNextStep();
-                }
-                timer -= speed;
-            }
 
+            if (IsGameRun)
+            {
+                timer += dt;
+                while (timer > speed)
+                {
+                    if (IsWait)
+                    {
+                        onLevelComplete?.Invoke();
+                    }
+                    else if (!IsDead)
+                    {
+                        DoNextStep();
+                    }
+                    timer -= speed;
+                }
+            }
         }
 
         private void DoNextStep()
         {
             moveDirection = newDirection;
-            Vector2i newHeadCoordinate = body.First().Coordinate + Field.getCoordinateOffset(moveDirection, false);
-            var currentElement = field.HasSomethingHere(newHeadCoordinate.X, newHeadCoordinate.Y);
+            Vector2i newHeadCoordinate = body.First().Coordinate + moveDirection.GetVector();
+            var currentElement = field.GetCellElement(newHeadCoordinate.X, newHeadCoordinate.Y);
             if (currentElement == null || currentElement.IsPermeate)
             {
                 body.First().FillColor = this.color;
                 var newHead = NewPart(newHeadCoordinate, Color.Red);
                 body.Insert(0, newHead);
-                //field.Data[newHead.Coordinate.X, newHead.Coordinate.Y] = newHead;
                 if (currentElement is Food)
                 {
-                    field.UpdateSnake(body.First());
+                    UpdateSnakeCells(body.First());
                     EatOneFood();
-                    field.NewFood();
                 }
                 else
                 {
-                    field.UpdateSnake(body.First(), body.Last());
-                    //field.Data[body.Last().Coordinate.X, body.Last().Coordinate.Y] = null;
+                    UpdateSnakeCells(body.First(), body.Last());
                     body.Remove(body.Last());
                 }
-
             }
             else
             {
                 Die();
             }
+        }
+
+        private void UpdateSnakeCells(SnakePart newHead, SnakePart deleteTail = null)
+        {
+            field.UpdateCell(newHead);
+            if (deleteTail != null)
+            {
+                field.ClearCell(deleteTail.Coordinate);
+            }
+        }
+
+        internal void OnCompleteLevelSubscribe(Action onLevelComplete)
+        {
+            this.onLevelComplete += onLevelComplete;
+        }
+
+        public void Win()
+        {
+            state = SnakeState.Wait;
         }
 
         public void OnEatFoodSubscribe(Action onEatFood)
@@ -125,7 +162,7 @@ namespace SnakeGame
 
         public void Die()
         {
-            snakeState = SnakeState.Dead;
+            state = SnakeState.Dead;
             this.ChangeColor(new Color(150, 150, 150));
             Game.context.IsGameStop = true;
         }

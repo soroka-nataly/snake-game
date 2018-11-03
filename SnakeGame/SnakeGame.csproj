@@ -72,9 +72,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DirectionExtension.cs" />
     <Compile Include="Field.cs" />
     <Compile Include="Food.cs" />
     <Compile Include="Game.cs" />
+    <Compile Include="GameRules.cs" />
     <Compile Include="GameStats.cs" />
     <Compile Include="IFieldElement.cs" />
     <Compile Include="Program.cs" />

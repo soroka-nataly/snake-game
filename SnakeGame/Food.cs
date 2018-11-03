@@ -11,9 +11,11 @@ namespace SnakeGame
         public bool IsPermeate => true;
         private Color color = new Color(255, 104, 0);
         private Drawable drawableElement;
+        public Vector2i Coordinate { get; private set; }
 
         public Food(Vector2i coordinate)
         {
+            Coordinate = coordinate;
             drawableElement = new CircleShape(Game.FieldCellSize / 2 - 1)
             {
                 Position = Field.GetPositionFromCoordinate(coordinate),

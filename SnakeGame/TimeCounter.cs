@@ -11,13 +11,9 @@ namespace SnakeGame
             lastTicks = DateTime.Now.Ticks;
         }
 
-        public float getTimeElapsed(bool IsGameRun)
+        public float getTimeElapsed()
         {
-            if (IsGameRun)
-                return (float)TimeSpan.FromTicks(getElapsedTicks()).TotalSeconds;
-            else
-                getElapsedTicks();
-                return 0.0f;
+            return (float)TimeSpan.FromTicks(getElapsedTicks()).TotalSeconds;
         }
 
         private long getElapsedTicks()

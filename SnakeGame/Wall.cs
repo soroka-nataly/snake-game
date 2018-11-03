@@ -9,11 +9,13 @@ namespace SnakeGame
     class Wall : IFieldElement, Drawable
     {
         public bool IsPermeate => false;
-        private Color color = new Color(200, 200, 200);
+        private static readonly Color color = new Color(200, 200, 200);
         private Drawable drawableElement;
+        public Vector2i Coordinate { get; private set; }
 
         public Wall(Vector2i coordinate)
         {
+            this.Coordinate = coordinate;
             drawableElement = new RectangleShape(new Vector2f(Game.FieldCellSize, Game.FieldCellSize))
             {
                 Position = Field.GetPositionFromCoordinate(coordinate),

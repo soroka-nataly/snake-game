@@ -38,7 +38,7 @@ namespace SnakeGame
         public GameStats(int updateSpeedPeriod, int updateLevelPeriod)
         {
             foodCount = 0;
-            level = 1;
+            level = 0;
             score = 0;
             //speed = 0.6f;
 
@@ -70,9 +70,9 @@ namespace SnakeGame
             var stats = new Dictionary<string, float>
             {
                 { "Food", foodCount },
-                { "Level", level },
+                { "Level", level + 1 },
                 { "Score", score },
-                //{ "Speed", speed }
+                { "Speed", speedLevel }
 
 
             };

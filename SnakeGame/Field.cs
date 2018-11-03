@@ -33,9 +33,18 @@ namespace SnakeGame
                         Data[i, j] = wall;
                 }
             }
-            NewFood();
             CreateLevels();
             countLevels = Levels.Count;
+        }
+
+        public bool IsCellFree(int x, int y)
+        {
+            return (Data[x, y] == null);
+        }
+
+        public Vector2i GetSize()
+        {
+            return new Vector2i(Data.GetLength(0), Data.GetLength(1));
         }
 
         private void CreateLevels()
@@ -57,7 +66,7 @@ namespace SnakeGame
                         {
                             if (imagePxl == '1')
                             {
-                                currentLevel[x, y] = new Wall(new Vector2i(x, y));
+                                currentLevel[x, y] = new Wall(new Vector2i(x + 1, y + 1));
                             }
                             x++;
                         }
@@ -74,8 +83,8 @@ namespace SnakeGame
 
         public int Update(int level)
         {
-            var fieldLevel = level - countLevels * round;
-            if (fieldLevel - 1 == countLevels) round++;
+            var fieldLevel = level % countLevels;
+            round = level / countLevels;
             if (Levels.TryGetValue(fieldLevel, out IFieldElement[,] imageLevel))
             {
                 Clear();
@@ -102,21 +111,6 @@ namespace SnakeGame
             }
         }
 
-        public void NewFood()
-        {
-            Random random = new Random();
-            while (true)
-            {
-                var x = random.Next(1, Data.GetLength(0) - 1);
-                var y = random.Next(1, Data.GetLength(1) - 1);
-                if (Data[x, y] == null)
-                {
-                    Data[x, y] = new Food(new Vector2i(x, y));
-                    return;
-                }
-            }
-        }
-
         public static Vector2f GetPositionFromCoordinate(Vector2i coordinate)
         {
             var x = (float)coordinate.X * Game.FieldCellSize;
@@ -126,70 +120,27 @@ namespace SnakeGame
             return position;
         }
 
-        public static Vector2i getCoordinateOffset(Direction direction, bool inversion)
+        public IFieldElement GetCellElement(int x, int y)
         {
-            Vector2i offset = new Vector2i(0, 0);
-            if (inversion)
-                direction = InvertDirection(direction);
-
-            switch (direction)
-            {
-                case Direction.Down:
-                    offset = new Vector2i(0, 1);
-                    break;
-                case Direction.Left:
-                    offset = new Vector2i(-1, 0);
-                    break;
-                case Direction.Up:
-                    offset = new Vector2i(0, -1);
-                    break;
-                case Direction.Right:
-                    offset = new Vector2i(1, 0);
-                    break;
-            }
-            return offset;
+            return Data[x, y];
         }
 
-        public static Direction InvertDirection(Direction direction)
+        public void UpdateCells(IEnumerable<IFieldElement> elements)
         {
-            var newDirection = Direction.Up;
-            switch (direction)
+            foreach (var elm in elements)
             {
-                case Direction.Down:
-                    newDirection = Direction.Up;
-                    break;
-                case Direction.Left:
-                    newDirection = Direction.Right;
-                    break;
-                case Direction.Up:
-                    newDirection = Direction.Down;
-                    break;
-                case Direction.Right:
-                    newDirection = Direction.Left;
-                    break;
-            }
-            return newDirection;
-        }
-
-        public IFieldElement HasSomethingHere(int x, int y)
-        {
-            var element = Data[x, y];
-            return element;
-        }
-
-        public void CreateSnake(List<SnakePart> snake)
-        {
-            foreach (SnakePart part in snake)
-            {
-                Data[part.Coordinate.X, part.Coordinate.Y] = part;
+                UpdateCell(elm);
             }
         }
 
-        public void UpdateSnake(SnakePart newHead, SnakePart deleteTail = null)
+        public void UpdateCell(IFieldElement element)
         {
-            Data[newHead.Coordinate.X, newHead.Coordinate.Y] = newHead;
-            if (deleteTail != null)
-                Data[deleteTail.Coordinate.X, deleteTail.Coordinate.Y] = null;
+            Data[element.Coordinate.X, element.Coordinate.Y] = element;
+        }
+
+        public void ClearCell(Vector2i coordinate)
+        {
+            Data[coordinate.X, coordinate.Y] = null;
         }
 
         public void Draw(RenderTarget window, RenderStates states)
@@ -199,10 +150,9 @@ namespace SnakeGame
                 var drawable = obj as Drawable;
                 if (drawable != null)
                 {
-                    window.Draw(drawable);
+                    drawable.Draw(window, states);
                 }
             }
         }
-
     }
 }

@@ -9,5 +9,6 @@ namespace SnakeGame
     interface IFieldElement
     {
         bool IsPermeate { get; }    
+        Vector2i Coordinate { get; }
     }
 }
